@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
+import { MedidoresModule } from './medidores/medidores.module';
 import { CiudadanosModule } from './ciudadanos/ciudadanos.module';
 import { MetodosPagoModule } from './metodos-pago/metodos-pago.module';
 import { CategoriasTarifaModule } from './categorias-tarifa/categorias-tarifa.module';
@@ -22,18 +23,7 @@ import { AuthModule } from './auth/auth.module';
     CategoriasTarifaModule,
     MetodosPagoModule,
     CiudadanosModule,
+    MedidoresModule,
   ],
 })
 export class AppModule {}
-
-/* import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { PrismaModule } from './prisma/prisma.module';
-
-@Module({
-  imports: [PrismaModule],
-  controllers: [AppController],
-  providers: [AppService],
-})
-export class AppModule {} */
