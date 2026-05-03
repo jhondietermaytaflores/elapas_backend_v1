@@ -10,6 +10,8 @@ import { UsuariosModule } from './usuarios/usuarios.module';
 import { RolesModule } from './roles/roles.module';
 import { AuthModule } from './auth/auth.module';
 import { LecturasModule } from './lecturas/lecturas.module';
+import { TarifasModule } from './tarifas/tarifas.module';
+import { FacturasModule } from './facturas/facturas.module';
 
 @Module({
   imports: [
@@ -26,6 +28,8 @@ import { LecturasModule } from './lecturas/lecturas.module';
     CiudadanosModule,
     MedidoresModule,
     LecturasModule,
+    TarifasModule,
+    FacturasModule,
   ],
 })
 export class AppModule {}
