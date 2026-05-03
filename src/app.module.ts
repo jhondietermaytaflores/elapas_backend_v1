@@ -12,6 +12,7 @@ import { AuthModule } from './auth/auth.module';
 import { LecturasModule } from './lecturas/lecturas.module';
 import { TarifasModule } from './tarifas/tarifas.module';
 import { FacturasModule } from './facturas/facturas.module';
+import { PagosModule } from './pagos/pagos.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { FacturasModule } from './facturas/facturas.module';
     LecturasModule,
     TarifasModule,
     FacturasModule,
+    PagosModule,
   ],
 })
 export class AppModule {}
