@@ -13,6 +13,7 @@ import { LecturasModule } from './lecturas/lecturas.module';
 import { TarifasModule } from './tarifas/tarifas.module';
 import { FacturasModule } from './facturas/facturas.module';
 import { PagosModule } from './pagos/pagos.module';
+import { CortesModule } from './cortes/cortes.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { PagosModule } from './pagos/pagos.module';
     TarifasModule,
     FacturasModule,
     PagosModule,
+    CortesModule,
   ],
 })
 export class AppModule {}
