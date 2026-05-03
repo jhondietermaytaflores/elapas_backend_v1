@@ -9,6 +9,7 @@ import { DistritosModule } from './distritos/distritos.module';
 import { UsuariosModule } from './usuarios/usuarios.module';
 import { RolesModule } from './roles/roles.module';
 import { AuthModule } from './auth/auth.module';
+import { LecturasModule } from './lecturas/lecturas.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { AuthModule } from './auth/auth.module';
     MetodosPagoModule,
     CiudadanosModule,
     MedidoresModule,
+    LecturasModule,
   ],
 })
 export class AppModule {}
