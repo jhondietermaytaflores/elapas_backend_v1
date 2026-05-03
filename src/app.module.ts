@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
+import { CiudadanosModule } from './ciudadanos/ciudadanos.module';
 import { MetodosPagoModule } from './metodos-pago/metodos-pago.module';
 import { CategoriasTarifaModule } from './categorias-tarifa/categorias-tarifa.module';
 import { DistritosModule } from './distritos/distritos.module';
@@ -20,6 +21,7 @@ import { AuthModule } from './auth/auth.module';
     DistritosModule,
     CategoriasTarifaModule,
     MetodosPagoModule,
+    CiudadanosModule,
   ],
 })
 export class AppModule {}
