@@ -1,0 +1,488 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+ // importFileExtension = "ts"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// =========================
+// ENUMS DEL SISTEMA
+// =========================
+
+enum EstadoServicio {
+  ACTIVO
+  CON_DEUDA
+  CORTADO
+  SUSPENDIDO
+}
+
+enum EstadoMedidor {
+  ACTIVO
+  DANADO
+  RETIRADO
+  REEMPLAZADO
+}
+
+enum EstadoLectura {
+  REGISTRADA
+  CONFIRMADA
+  ANULADA
+}
+
+enum EstadoFactura {
+  PENDIENTE
+  PAGADA
+  VENCIDA
+  ANULADA
+}
+
+enum EstadoPago {
+  PENDIENTE
+  CONFIRMADO
+  ANULADO
+}
+
+enum EstadoCorte {
+  PENDIENTE
+  EJECUTADO
+  CANCELADO
+}
+
+enum EstadoReconexion {
+  PENDIENTE
+  EJECUTADA
+  CANCELADA
+}
+
+// =========================
+// ROLES
+// =========================
+
+model Rol {
+  id        Int       @id @default(autoincrement())
+  nombre    String    @unique @db.VarChar(30)
+
+  usuarios  Usuario[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+// =========================
+// USUARIOS DEL SISTEMA
+// Admin, ciudadano, técnico, cajero, supervisor
+// =========================
+
+model Usuario {
+  id          Int       @id @default(autoincrement())
+  nombre      String    @db.VarChar(150)
+  apellido    String?   @db.VarChar(150)
+  ci          String    @unique @db.VarChar(30)
+  email       String?   @unique @db.VarChar(150)
+  password    String    @db.Text
+  telefono    String?   @db.VarChar(30)
+
+  rolId       Int
+  rol         Rol       @relation(fields: [rolId], references: [id])
+
+  activo      Boolean   @default(true)
+  ultimoLogin DateTime?
+
+  ciudadano   Ciudadano?
+
+  lecturasRegistradas    Lectura[]     @relation("LecturasTecnico")
+  pagosRegistrados       Pago[]        @relation("PagosUsuario")
+  cortesEjecutados       Corte[]       @relation("CortesTecnico")
+  reconexionesEjecutadas Reconexion[]  @relation("ReconexionesTecnico")
+  auditorias             Auditoria[]
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([rolId])
+  @@index([ci])
+}
+
+// =========================
+// DISTRITOS / ZONAS
+// =========================
+
+model Distrito {
+  id          Int          @id @default(autoincrement())
+  nombre      String       @unique @db.VarChar(80)
+  descripcion String?      @db.Text
+  activo      Boolean      @default(true)
+
+  ciudadanos  Ciudadano[]
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+// =========================
+// CATEGORÍAS TARIFARIAS
+// Doméstico, Comercial, Social, etc.
+// =========================
+
+model CategoriaTarifa {
+  id          Int        @id @default(autoincrement())
+  nombre      String     @unique @db.VarChar(80)
+  descripcion String?    @db.Text
+  activo      Boolean    @default(true)
+
+  ciudadanos  Ciudadano[]
+  tarifas     Tarifa[]
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+// =========================
+// CIUDADANO / CLIENTE DEL SERVICIO
+// =========================
+
+model Ciudadano {
+  usuarioId      Int      @id
+  usuario        Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  codigoCliente  String   @unique @db.VarChar(50)
+
+  categoriaId    Int
+  categoria      CategoriaTarifa @relation(fields: [categoriaId], references: [id])
+
+  distritoId     Int
+  distrito       Distrito @relation(fields: [distritoId], references: [id])
+
+  direccion      String   @db.Text
+  referencia     String?  @db.Text
+
+  estadoServicio EstadoServicio @default(ACTIVO)
+
+  medidores      Medidor[]
+  facturas       Factura[]
+  cortes         Corte[]
+  reconexiones   Reconexion[]
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([categoriaId])
+  @@index([distritoId])
+  @@index([estadoServicio])
+}
+
+// =========================
+// TARIFAS
+// =========================
+
+model Tarifa {
+  id            Int      @id @default(autoincrement())
+
+  categoriaId   Int
+  categoria     CategoriaTarifa @relation(fields: [categoriaId], references: [id])
+
+  rangoDesde    Decimal  @db.Decimal(10, 2)
+  rangoHasta    Decimal? @db.Decimal(10, 2)
+
+  precioM3      Decimal  @db.Decimal(10, 2)
+  cargoFijo     Decimal  @default(0) @db.Decimal(10, 2)
+
+  activo        Boolean  @default(true)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([categoriaId])
+  @@index([activo])
+}
+
+// =========================
+// MEDIDORES
+// =========================
+
+model Medidor {
+  id                Int      @id @default(autoincrement())
+
+  codigoMedidor     String   @unique @db.VarChar(80)
+  numeroSerie       String   @unique @db.VarChar(100)
+
+  ciudadanoId       Int
+  ciudadano         Ciudadano @relation(fields: [ciudadanoId], references: [usuarioId])
+
+  marca             String?  @db.VarChar(100)
+  modelo            String?  @db.VarChar(100)
+
+  fechaInstalacion  DateTime?
+  lecturaInicial    Decimal  @default(0) @db.Decimal(10, 2)
+
+  estado            EstadoMedidor @default(ACTIVO)
+
+  lecturas          Lectura[]
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([ciudadanoId])
+  @@index([estado])
+}
+
+// =========================
+// LECTURAS DE MEDIDOR
+// =========================
+
+model Lectura {
+  id                 Int      @id @default(autoincrement())
+
+  medidorId          Int
+  medidor            Medidor  @relation(fields: [medidorId], references: [id])
+
+  tecnicoId          Int
+  tecnico            Usuario  @relation("LecturasTecnico", fields: [tecnicoId], references: [id])
+
+  periodo            String   @db.VarChar(7) // Ejemplo: 2026-01
+
+  lecturaAnterior    Decimal  @db.Decimal(10, 2)
+  lecturaActual      Decimal  @db.Decimal(10, 2)
+  consumoM3          Decimal  @db.Decimal(10, 2)
+
+  fechaLectura       DateTime @default(now())
+
+  latitud            Float?
+  longitud           Float?
+  fotoEvidenciaUrl   String?  @db.Text
+  observacion        String?  @db.Text
+
+  estado             EstadoLectura @default(REGISTRADA)
+
+  factura            Factura?
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@unique([medidorId, periodo])
+  @@index([medidorId])
+  @@index([tecnicoId])
+  @@index([periodo])
+  @@index([estado])
+}
+
+// =========================
+// FACTURAS
+// =========================
+
+model Factura {
+  id                 Int      @id @default(autoincrement())
+
+  numeroFactura      String   @unique @db.VarChar(80)
+
+  ciudadanoId        Int
+  ciudadano          Ciudadano @relation(fields: [ciudadanoId], references: [usuarioId])
+
+  lecturaId          Int      @unique
+  lectura            Lectura  @relation(fields: [lecturaId], references: [id])
+
+  periodo            String   @db.VarChar(7)
+
+  consumoM3          Decimal  @db.Decimal(10, 2)
+  montoAgua          Decimal  @db.Decimal(10, 2)
+  cargoFijo          Decimal  @default(0) @db.Decimal(10, 2)
+  multa              Decimal  @default(0) @db.Decimal(10, 2)
+  montoTotal         Decimal  @db.Decimal(10, 2)
+
+  estado             EstadoFactura @default(PENDIENTE)
+
+  fechaEmision       DateTime @default(now())
+  fechaVencimiento   DateTime
+
+  detalles           DetalleFactura[]
+  pago               Pago?
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@unique([ciudadanoId, periodo])
+  @@index([ciudadanoId])
+  @@index([periodo])
+  @@index([estado])
+}
+
+// =========================
+// DETALLE DE FACTURA
+// =========================
+
+model DetalleFactura {
+  id              Int      @id @default(autoincrement())
+
+  facturaId       Int
+  factura         Factura  @relation(fields: [facturaId], references: [id], onDelete: Cascade)
+
+  descripcion     String   @db.VarChar(255)
+  cantidad        Decimal  @default(1) @db.Decimal(10, 2)
+  precioUnitario  Decimal  @db.Decimal(10, 2)
+  subtotal        Decimal  @db.Decimal(10, 2)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([facturaId])
+}
+
+// =========================
+// MÉTODOS DE PAGO
+// =========================
+
+model MetodoPago {
+  id          Int      @id @default(autoincrement())
+  nombre      String   @unique @db.VarChar(80)
+  descripcion String?  @db.Text
+  activo      Boolean  @default(true)
+
+  pagos       Pago[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// =========================
+// PAGOS / RECAUDACIONES
+// =========================
+
+model Pago {
+  id                    Int      @id @default(autoincrement())
+
+  facturaId             Int      @unique
+  factura               Factura  @relation(fields: [facturaId], references: [id])
+
+  usuarioId             Int?
+  usuario               Usuario? @relation("PagosUsuario", fields: [usuarioId], references: [id])
+
+  metodoId              Int
+  metodo                MetodoPago @relation(fields: [metodoId], references: [id])
+
+  codigoPago            String   @unique @db.VarChar(100)
+  montoPagado           Decimal  @db.Decimal(10, 2)
+
+  estado                EstadoPago @default(CONFIRMADO)
+
+  referenciaTransaccion String?  @db.VarChar(150)
+  qrReferencia          String?  @db.Text
+  observacion           String?  @db.Text
+
+  fechaPago             DateTime @default(now())
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([usuarioId])
+  @@index([metodoId])
+  @@index([fechaPago])
+  @@index([estado])
+}
+
+// =========================
+// CORTES DE SERVICIO
+// =========================
+
+model Corte {
+  id                  Int      @id @default(autoincrement())
+
+  ciudadanoId          Int
+  ciudadano            Ciudadano @relation(fields: [ciudadanoId], references: [usuarioId])
+
+  tecnicoId            Int?
+  tecnico              Usuario? @relation("CortesTecnico", fields: [tecnicoId], references: [id])
+
+  motivo               String   @db.Text
+
+  deudaTotal           Decimal  @default(0) @db.Decimal(10, 2)
+  facturasVencidas     Int      @default(0)
+
+  estado               EstadoCorte @default(PENDIENTE)
+
+  fechaProgramada      DateTime?
+  fechaEjecucion       DateTime?
+
+  fotoEvidenciaUrl     String?  @db.Text
+  latitud              Float?
+  longitud             Float?
+  observacion          String?  @db.Text
+
+  reconexiones         Reconexion[]
+
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([ciudadanoId])
+  @@index([tecnicoId])
+  @@index([estado])
+  @@index([fechaProgramada])
+}
+
+// =========================
+// RECONEXIONES
+// =========================
+
+model Reconexion {
+  id                  Int      @id @default(autoincrement())
+
+  ciudadanoId          Int
+  ciudadano            Ciudadano @relation(fields: [ciudadanoId], references: [usuarioId])
+
+  corteId              Int?
+  corte                Corte?   @relation(fields: [corteId], references: [id])
+
+  tecnicoId            Int?
+  tecnico              Usuario? @relation("ReconexionesTecnico", fields: [tecnicoId], references: [id])
+
+  costoReconexion      Decimal  @default(0) @db.Decimal(10, 2)
+
+  estado               EstadoReconexion @default(PENDIENTE)
+
+  fechaProgramada      DateTime?
+  fechaEjecucion       DateTime?
+
+  fotoEvidenciaUrl     String?  @db.Text
+  latitud              Float?
+  longitud             Float?
+  observacion          String?  @db.Text
+
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([ciudadanoId])
+  @@index([corteId])
+  @@index([tecnicoId])
+  @@index([estado])
+}
+
+// =========================
+// AUDITORÍA DEL SISTEMA
+// =========================
+
+model Auditoria {
+  id           Int      @id @default(autoincrement())
+
+  usuarioId    Int?
+  usuario      Usuario? @relation(fields: [usuarioId], references: [id])
+
+  accion       String   @db.VarChar(100)
+  entidad      String   @db.VarChar(100)
+  entidadId    Int?
+  descripcion  String?  @db.Text
+  ip           String?  @db.VarChar(80)
+
+  createdAt    DateTime @default(now())
+
+  @@index([usuarioId])
+  @@index([entidad])
+  @@index([createdAt])
+}
