@@ -15,6 +15,7 @@ import { FacturasModule } from './facturas/facturas.module';
 import { PagosModule } from './pagos/pagos.module';
 import { CortesModule } from './cortes/cortes.module';
 import { ReconexionesModule } from './reconexiones/reconexiones.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { ReconexionesModule } from './reconexiones/reconexiones.module';
     PagosModule,
     CortesModule,
     ReconexionesModule,
+    DashboardModule,
   ],
 })
 export class AppModule {}
