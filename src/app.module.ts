@@ -16,6 +16,7 @@ import { PagosModule } from './pagos/pagos.module';
 import { CortesModule } from './cortes/cortes.module';
 import { ReconexionesModule } from './reconexiones/reconexiones.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { PortalCiudadanoModule } from './portal-ciudadano/portal-ciudadano.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     CortesModule,
     ReconexionesModule,
     DashboardModule,
+    PortalCiudadanoModule,
   ],
 })
 export class AppModule {}
