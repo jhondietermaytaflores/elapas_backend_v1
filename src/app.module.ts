@@ -18,6 +18,7 @@ import { ReconexionesModule } from './reconexiones/reconexiones.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { PortalCiudadanoModule } from './portal-ciudadano/portal-ciudadano.module';
 import { AuditoriasModule } from './auditorias/auditorias.module';
+import { ConsultaPublicaModule } from './consulta-publica/consulta-publica.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { AuditoriasModule } from './auditorias/auditorias.module';
     DashboardModule,
     PortalCiudadanoModule,
     AuditoriasModule,
+    ConsultaPublicaModule,
   ],
 })
 export class AppModule {}
