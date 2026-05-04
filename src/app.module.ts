@@ -14,6 +14,7 @@ import { TarifasModule } from './tarifas/tarifas.module';
 import { FacturasModule } from './facturas/facturas.module';
 import { PagosModule } from './pagos/pagos.module';
 import { CortesModule } from './cortes/cortes.module';
+import { ReconexionesModule } from './reconexiones/reconexiones.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { CortesModule } from './cortes/cortes.module';
     FacturasModule,
     PagosModule,
     CortesModule,
+    ReconexionesModule,
   ],
 })
 export class AppModule {}
