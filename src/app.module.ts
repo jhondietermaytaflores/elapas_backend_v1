@@ -17,6 +17,7 @@ import { CortesModule } from './cortes/cortes.module';
 import { ReconexionesModule } from './reconexiones/reconexiones.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { PortalCiudadanoModule } from './portal-ciudadano/portal-ciudadano.module';
+import { AuditoriasModule } from './auditorias/auditorias.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { PortalCiudadanoModule } from './portal-ciudadano/portal-ciudadano.modul
     ReconexionesModule,
     DashboardModule,
     PortalCiudadanoModule,
+    AuditoriasModule,
   ],
 })
 export class AppModule {}

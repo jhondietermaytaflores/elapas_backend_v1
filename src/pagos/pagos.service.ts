@@ -12,10 +12,15 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreatePagoDto } from './dto/create-pago.dto';
 import { FilterPagosDto } from './dto/filter-pagos.dto';
 import { RecaudacionRangoDto } from './dto/recaudacion-rango.dto';
+import { AuditoriasService } from '../auditorias/auditorias.service';
+import { AuditoriasModule } from '../auditorias/auditorias.module';
 
 @Injectable()
 export class PagosService {
-    constructor(private readonly prisma: PrismaService) { }
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly auditoriasService: AuditoriasService, // se agrego esto al constructor Para Auditoria
+    ) { }
 
     private pagoInclude() {
         return {
@@ -201,8 +206,59 @@ export class PagosService {
         }
 
         const estadoPago = dto.estado ?? EstadoPago.CONFIRMADO;
+        /*    esto era antes del modulo Auditoria
+                return this.prisma.$transaction(async (tx) => {
+                    const pago = await tx.pago.create({
+                        data: {
+                            facturaId: dto.facturaId,
+                            usuarioId,
+                            metodoId: dto.metodoId,
+                            codigoPago,
+                            montoPagado: dto.montoPagado,
+                            estado: estadoPago,
+                            referenciaTransaccion: dto.referenciaTransaccion?.trim(),
+                            qrReferencia: dto.qrReferencia?.trim(),
+                            observacion: dto.observacion?.trim(),
+                        },
+                        include: this.pagoInclude(),
+                    });
+        
+                    if (estadoPago === EstadoPago.CONFIRMADO) {
+                        await tx.factura.update({
+                            where: {
+                                id: dto.facturaId,
+                            },
+                            data: {
+                                estado: EstadoFactura.PAGADA,
+                            },
+                        });
+        
+                        const deudasPendientes = await tx.factura.count({
+                            where: {
+                                ciudadanoId: factura.ciudadanoId,
+                                estado: {
+                                    in: [EstadoFactura.PENDIENTE, EstadoFactura.VENCIDA],
+                                },
+                            },
+                        });
+        
+                        if (deudasPendientes === 0) {
+                            await tx.ciudadano.update({
+                                where: {
+                                    usuarioId: factura.ciudadanoId,
+                                },
+                                data: {
+                                    estadoServicio: EstadoServicio.ACTIVO,
+                                },
+                            });
+                        }
+                    }
+        
+                    return pago;
+                }); */
 
-        return this.prisma.$transaction(async (tx) => {
+
+        const pagoCreado = await this.prisma.$transaction(async (tx) => {
             const pago = await tx.pago.create({
                 data: {
                     facturaId: dto.facturaId,
@@ -251,6 +307,16 @@ export class PagosService {
 
             return pago;
         });
+
+        await this.auditoriasService.registrarLog({
+            usuarioId,
+            accion: 'CREAR',
+            entidad: 'Pago',
+            entidadId: pagoCreado.id,
+            descripcion: `Pago ${pagoCreado.codigoPago} registrado para la factura ${pagoCreado.factura.numeroFactura}`,
+        });
+
+        return pagoCreado;
     }
 
     async findAll(filtros: FilterPagosDto) {
