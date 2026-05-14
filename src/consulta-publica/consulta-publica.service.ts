@@ -263,4 +263,162 @@ export class ConsultaPublicaService {
             totalDeuda: Number(deuda._sum.montoTotal ?? 0),
         };
     }
+
+    //news consultas 
+
+    async consultarMedidores(dto: ConsultaDeudaDto) {
+        const ciudadano = await this.buscarCiudadano(dto);
+
+        const medidores = await this.prisma.medidor.findMany({
+            where: {
+                ciudadanoId: ciudadano.usuarioId,
+            },
+            select: {
+                id: true,
+                codigoMedidor: true,
+                numeroSerie: true,
+                marca: true,
+                modelo: true,
+                fechaInstalacion: true,
+                lecturaInicial: true,
+                estado: true,
+                _count: {
+                    select: {
+                        lecturas: true,
+                    },
+                },
+            },
+            orderBy: {
+                id: 'asc',
+            },
+        });
+
+        return {
+            ciudadano: {
+                codigoCliente: ciudadano.codigoCliente,
+                nombre: ciudadano.usuario.nombre,
+                apellido: ciudadano.usuario.apellido,
+                ci: ciudadano.usuario.ci,
+                estadoServicio: ciudadano.estadoServicio,
+            },
+            medidores,
+        };
+    }
+
+    async consultarLecturas(dto: ConsultaDeudaDto) {
+        const ciudadano = await this.buscarCiudadano(dto);
+
+        const lecturas = await this.prisma.lectura.findMany({
+            where: {
+                medidor: {
+                    ciudadanoId: ciudadano.usuarioId,
+                },
+            },
+            select: {
+                id: true,
+                periodo: true,
+                lecturaAnterior: true,
+                lecturaActual: true,
+                consumoM3: true,
+                fechaLectura: true,
+                estado: true,
+                medidor: {
+                    select: {
+                        id: true,
+                        codigoMedidor: true,
+                        numeroSerie: true,
+                    },
+                },
+                factura: {
+                    select: {
+                        id: true,
+                        numeroFactura: true,
+                        estado: true,
+                        montoTotal: true,
+                        fechaVencimiento: true,
+                    },
+                },
+            },
+            orderBy: {
+                fechaLectura: 'desc',
+            },
+        });
+
+        return {
+            ciudadano: {
+                codigoCliente: ciudadano.codigoCliente,
+                nombre: ciudadano.usuario.nombre,
+                apellido: ciudadano.usuario.apellido,
+                ci: ciudadano.usuario.ci,
+                estadoServicio: ciudadano.estadoServicio,
+            },
+            lecturas,
+        };
+    }
+
+    async consultarLecturasPorMedidor(
+        medidorId: number,
+        dto: ConsultaDeudaDto,
+    ) {
+        const ciudadano = await this.buscarCiudadano(dto);
+
+        const medidor = await this.prisma.medidor.findFirst({
+            where: {
+                id: medidorId,
+                ciudadanoId: ciudadano.usuarioId,
+            },
+            select: {
+                id: true,
+                codigoMedidor: true,
+                numeroSerie: true,
+                marca: true,
+                modelo: true,
+                estado: true,
+            },
+        });
+
+        if (!medidor) {
+            throw new NotFoundException(
+                'Medidor no encontrado para los datos ingresados',
+            );
+        }
+
+        const lecturas = await this.prisma.lectura.findMany({
+            where: {
+                medidorId,
+            },
+            select: {
+                id: true,
+                periodo: true,
+                lecturaAnterior: true,
+                lecturaActual: true,
+                consumoM3: true,
+                fechaLectura: true,
+                estado: true,
+                factura: {
+                    select: {
+                        id: true,
+                        numeroFactura: true,
+                        estado: true,
+                        montoTotal: true,
+                        fechaVencimiento: true,
+                    },
+                },
+            },
+            orderBy: {
+                fechaLectura: 'desc',
+            },
+        });
+
+        return {
+            ciudadano: {
+                codigoCliente: ciudadano.codigoCliente,
+                nombre: ciudadano.usuario.nombre,
+                apellido: ciudadano.usuario.apellido,
+                ci: ciudadano.usuario.ci,
+            },
+            medidor,
+            lecturas,
+        };
+    }
 }

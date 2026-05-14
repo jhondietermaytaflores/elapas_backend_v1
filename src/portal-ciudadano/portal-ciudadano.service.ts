@@ -401,4 +401,160 @@ export class PortalCiudadanoService {
             },
         };
     }
+
+    //news endpoints specifics
+    async detalleMiMedidor(usuarioId: number, medidorId: number) {
+        await this.validarCiudadano(usuarioId);
+
+        const medidor = await this.prisma.medidor.findFirst({
+            where: {
+                id: medidorId,
+                ciudadanoId: usuarioId,
+            },
+            include: {
+                lecturas: {
+                    orderBy: {
+                        fechaLectura: 'desc',
+                    },
+                },
+                ciudadano: {
+                    include: {
+                        usuario: {
+                            select: {
+                                id: true,
+                                nombre: true,
+                                apellido: true,
+                                ci: true,
+                            },
+                        },
+                        categoria: true,
+                        distrito: true,
+                    },
+                },
+            },
+        });
+
+        if (!medidor) {
+            throw new NotFoundException(
+                'Medidor no encontrado o no pertenece al ciudadano autenticado',
+            );
+        }
+
+        return medidor;
+    }
+
+    async lecturasDeMiMedidor(usuarioId: number, medidorId: number) {
+        await this.validarCiudadano(usuarioId);
+
+        const medidor = await this.prisma.medidor.findFirst({
+            where: {
+                id: medidorId,
+                ciudadanoId: usuarioId,
+            },
+        });
+
+        if (!medidor) {
+            throw new NotFoundException(
+                'Medidor no encontrado o no pertenece al ciudadano autenticado',
+            );
+        }
+
+        return this.prisma.lectura.findMany({
+            where: {
+                medidorId,
+            },
+            include: {
+                medidor: {
+                    select: {
+                        id: true,
+                        codigoMedidor: true,
+                        numeroSerie: true,
+                        marca: true,
+                        modelo: true,
+                        estado: true,
+                    },
+                },
+                factura: {
+                    select: {
+                        id: true,
+                        numeroFactura: true,
+                        periodo: true,
+                        montoTotal: true,
+                        estado: true,
+                        fechaEmision: true,
+                        fechaVencimiento: true,
+                    },
+                },
+            },
+            orderBy: {
+                fechaLectura: 'desc',
+            },
+        });
+    }
+
+    async detalleMiFactura(usuarioId: number, facturaId: number) {
+        await this.validarCiudadano(usuarioId);
+
+        const factura = await this.prisma.factura.findFirst({
+            where: {
+                id: facturaId,
+                ciudadanoId: usuarioId,
+            },
+            include: {
+                detalles: true,
+                lectura: {
+                    include: {
+                        medidor: true,
+                    },
+                },
+                pago: {
+                    include: {
+                        metodo: true,
+                    },
+                },
+            },
+        });
+
+        if (!factura) {
+            throw new NotFoundException(
+                'Factura no encontrada o no pertenece al ciudadano autenticado',
+            );
+        }
+
+        return factura;
+    }
+
+    async detalleMiPago(usuarioId: number, pagoId: number) {
+        await this.validarCiudadano(usuarioId);
+
+        const pago = await this.prisma.pago.findFirst({
+            where: {
+                id: pagoId,
+                factura: {
+                    ciudadanoId: usuarioId,
+                },
+            },
+            include: {
+                metodo: true,
+                factura: {
+                    include: {
+                        detalles: true,
+                        lectura: {
+                            include: {
+                                medidor: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        if (!pago) {
+            throw new NotFoundException(
+                'Pago no encontrado o no pertenece al ciudadano autenticado',
+            );
+        }
+
+        return pago;
+    }
 }

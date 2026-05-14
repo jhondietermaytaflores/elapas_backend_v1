@@ -9,6 +9,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { PortalCiudadanoService } from './portal-ciudadano.service';
+import { Param, ParseIntPipe } from '@nestjs/common';
 
 @ApiTags('Portal Ciudadano')
 @ApiBearerAuth('JWT-auth')
@@ -98,5 +99,51 @@ export class PortalCiudadanoController {
     })
     resumen(@GetUser() user: any) {
         return this.portalCiudadanoService.resumen(user.id);
+    }
+
+    //update: news end's
+
+    @Get('mis-medidores/:medidorId')
+    @ApiOperation({
+        summary: 'Obtener detalle de un medidor del ciudadano autenticado',
+    })
+    detalleMiMedidor(
+        @GetUser() user: any,
+        @Param('medidorId', ParseIntPipe) medidorId: number,
+    ) {
+        return this.portalCiudadanoService.detalleMiMedidor(user.id, medidorId);
+    }
+
+    @Get('mis-medidores/:medidorId/lecturas')
+    @ApiOperation({
+        summary: 'Obtener lecturas de un medidor del ciudadano autenticado',
+    })
+    lecturasDeMiMedidor(
+        @GetUser() user: any,
+        @Param('medidorId', ParseIntPipe) medidorId: number,
+    ) {
+        return this.portalCiudadanoService.lecturasDeMiMedidor(user.id, medidorId);
+    }
+
+    @Get('mis-facturas/:facturaId')
+    @ApiOperation({
+        summary: 'Obtener detalle de una factura del ciudadano autenticado',
+    })
+    detalleMiFactura(
+        @GetUser() user: any,
+        @Param('facturaId', ParseIntPipe) facturaId: number,
+    ) {
+        return this.portalCiudadanoService.detalleMiFactura(user.id, facturaId);
+    }
+
+    @Get('mis-pagos/:pagoId')
+    @ApiOperation({
+        summary: 'Obtener detalle de un pago del ciudadano autenticado',
+    })
+    detalleMiPago(
+        @GetUser() user: any,
+        @Param('pagoId', ParseIntPipe) pagoId: number,
+    ) {
+        return this.portalCiudadanoService.detalleMiPago(user.id, pagoId);
     }
 }
