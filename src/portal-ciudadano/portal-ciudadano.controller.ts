@@ -9,7 +9,9 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { PortalCiudadanoService } from './portal-ciudadano.service';
-import { Param, ParseIntPipe } from '@nestjs/common';
+import { Param, ParseIntPipe, } from '@nestjs/common';
+import { Body, Post } from '@nestjs/common';
+import { SimularPagoDto } from './dto/simular-pago.dto';
 
 @ApiTags('Portal Ciudadano')
 @ApiBearerAuth('JWT-auth')
@@ -145,5 +147,37 @@ export class PortalCiudadanoController {
         @Param('pagoId', ParseIntPipe) pagoId: number,
     ) {
         return this.portalCiudadanoService.detalleMiPago(user.id, pagoId);
+    }
+
+    // news -pagos 
+    @Post('mis-facturas/:facturaId/simular-pago')
+    @ApiOperation({
+        summary: 'Simular pago de una factura del ciudadano autenticado',
+        description:
+            'Registra un pago simulado, cambia la factura a PAGADA y actualiza estados relacionados. Si el ciudadano estaba CORTADO y ya no tiene deuda, genera una reconexión pendiente.',
+    })
+    simularPagoFactura(
+        @GetUser() user: any,
+        @Param('facturaId', ParseIntPipe) facturaId: number,
+        @Body() dto: SimularPagoDto,
+    ) {
+        return this.portalCiudadanoService.simularPagoFactura(
+            user.id,
+            facturaId,
+            dto,
+        );
+    }
+
+    @Post('mi-deuda/simular-pago-total')
+    @ApiOperation({
+        summary: 'Simular pago total de la deuda del ciudadano autenticado',
+        description:
+            'Paga todas las facturas pendientes/vencidas del ciudadano. Si estaba CORTADO, genera una reconexión pendiente.',
+    })
+    simularPagoDeudaTotal(
+        @GetUser() user: any,
+        @Body() dto: SimularPagoDto,
+    ) {
+        return this.portalCiudadanoService.simularPagoDeudaTotal(user.id, dto);
     }
 }
